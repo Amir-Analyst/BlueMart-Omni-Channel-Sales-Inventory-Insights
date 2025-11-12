@@ -1,25 +1,27 @@
-# **BlueMart Project Story (Executive Narrative)**
+# **BlueMart Retail LLC — 2025 Analytics Project Story**
 
 ---
 
 ## **Company Overview**
 
-**BlueMart Retail LLC** is a mid-sized UAE-based omnichannel retailer operating **50+ physical stores** across major emirates — **Dubai, Abu Dhabi, and Sharjah** — alongside a growing e-commerce presence through its **website, mobile app, and marketplaces (Amazon.ae, Noon)**.  
-Established in **2018**, BlueMart’s mission is to integrate its physical and digital sales channels, optimize inventory performance, and leverage **advanced analytics** to enhance **profitability** and **customer engagement**.
+BlueMart Retail LLC is a UAE-based omnichannel retailer operating **30 stores** across Dubai, Abu Dhabi, and Sharjah, complemented by an e-commerce presence via its website, mobile app, and marketplaces such as Amazon.ae and Noon.
+
+* **Products**: ~5,000 SKUs across Grocery, Beverages, Personal Care, Household, Snacks, Dairy, and Electronics.  
+* **Customers**: ~10,000 unique customers in 2025, segmented into loyalty tiers (Silver, Gold, Platinum).  
+* **Objective**: Integrate physical and digital channels, optimize inventory, and leverage analytics for actionable business decisions.
 
 ---
 
 ## **Business Challenge**
 
-BlueMart faces typical omni-channel retail complexities, including:
+BlueMart faces **typical mid-sized retailer challenges**:
 
-- Maintaining **optimal stock levels** across 50+ stores and central warehouses.  
-- **Forecasting demand** during **seasonal peaks** (Ramadan, Eid, Dubai Shopping Festival, Black Friday, UAE National Day).  
-- Balancing **gross margin** while executing **promotional campaigns**.  
-- Understanding **customer purchase behavior** and **retention** across multiple channels.  
-- Managing **e-commerce order fulfillment**, **channel-wise profitability tracking**, and **loyalty segmentation** for targeted engagement.  
-
-These challenges create a need for a unified analytics framework to drive decision-making and operational efficiency.
+* Maintain **optimal stock levels** across 30 stores despite SKU rotation, slow movers, and seasonal spikes (Ramadan, Eid, Dubai Shopping Festival, Black Friday, National Day).  
+* Forecast **SKU-level demand** to prevent stockouts or overstock.  
+* Understand **customer behavior** and **channel preferences** for retention and targeted campaigns.  
+* Evaluate **channel performance** (store, website, mobile, marketplaces) for revenue optimization.  
+* Assess **promotion ROI** and seasonal impact on margins.  
+* Handle **real-world data complications**: missing customer IDs, stockouts, partial fulfillment, and inconsistent discount application.
 
 ---
 
@@ -27,86 +29,111 @@ These challenges create a need for a unified analytics framework to drive decisi
 
 Build a **KPI-driven analytics framework** to:
 
-1. Provide **holistic visibility** into sales, inventory, and promotions across all channels.  
-2. **Forecast SKU-level demand** and optimize **safety stock thresholds** to reduce stockouts and overstock.  
-3. Identify **high-value customers** and **preferred channels** for targeted marketing.  
-4. Enable management to make **data-driven decisions** that improve revenue, gross margin, and operational efficiency.
+1. Provide **holistic visibility** into sales, inventory, promotions, and customer behavior.  
+2. Forecast **SKU-level demand** and recommend **safety stock levels**.  
+3. Identify **high-value customers** and preferred channels.  
+4. Enable management to make **data-driven decisions** improving revenue, gross margin, and operational efficiency.  
+5. Deliver insights via **executive-ready dashboards and reports**.
 
 ---
 
-## **Approach**
+## **Dataset Overview**
 
-1. **Data Simulation:**  
-   Generate a **synthetic yet realistic UAE retail dataset** covering **Jan 2018 – Oct 2025**, including:
-   - Daily transactions  
-   - SKU and store details (50+ stores)  
-   - Inventory movements  
-   - Promotions  
-   - Customer behaviors  
+**Time Period:** Jan 1 – Dec 31, 2025 (daily granularity)  
+**Stores:** 30 (Mall, High Street, Community)  
+**SKU Universe:** 5,000 SKUs; each store actively sells 1,000–1,500 SKUs/month  
+**Customers:** 150–200 per store per day; basket size 5–7 SKUs  
+**Channels:** Store (~70%), Website, Mobile App, occasional marketplaces  
 
-2. **Exploratory Data Analysis:**  
-   Uncover patterns in **sales trends**, **seasonality**, and **channel performance**.
+| Table              | Description                                                                                   | Size         |
+| ------------------ | --------------------------------------------------------------------------------------------- | ------------ |
+| Store Master       | store_id, store_name, city, store_type, opening_date                                          | 30 rows      |
+| SKU Master         | sku_id, sku_name, category, subcategory, unit_price, cost_price, brand                        | 5,000 rows   |
+| Customer Master    | cust_id, age, gender, city, loyalty_segment, preferred_channel, registration_date             | ~10,000 rows |
+| Sales Transactions | date, store_id, sku_id, customer_id, quantity, unit_price, total_value, channel, discount_pct | ~1–1.5M rows |
+| Inventory Snapshot | store_id, sku_id, stock_on_hand, reorder_point, safety_stock, last_restock_date               | ~20,000 rows |
+| Promotions         | promo_id, promo_name, start_date, end_date, discount_pct, promo_type                          | ~100 rows    |
 
-3. **Forecasting Models:**  
-   Build **XGBoost** and **LightGBM** models to predict demand and optimize **SKU-level safety stock** planning.
+**Realism Built-In:**
 
-4. **Dashboard Development:**  
-   Create a **Streamlit dashboard prototype** to visualize executive KPIs and actionable insights.
-
-5. **Insight Derivation:**  
-   Generate recommendations for **merchandising**, **marketing**, and **supply chain** optimization.
-
----
-
-## **High-Level KPI Mapping**
-
-| **KPI** | **Description** | **Data Source / Calculation** | **Dashboard Placement** |
-|----------|----------------|-------------------------------|--------------------------|
-| **Total Revenue** | Overall sales across all channels | `Transaction table: qty × price` | Executive summary + sales trends by channel |
-| **Gross Margin % (GM%)** | Profitability measure | `(Revenue – COGS) / Revenue × 100` | Revenue vs. cost analysis by SKU, store, channel |
-| **Sales by Channel** | Revenue contribution per channel | Transaction channel attribute | Channel performance comparison charts |
-| **Inventory Turnover** | Efficiency of stock movement | `COGS / Avg Inventory` | Heatmap by SKU & store; highlight slow movers |
-| **Stockout Rate / Fill Rate** | % of demand met without stockouts | Inventory + transaction data | Alerts / KPI cards for warehouse & stores |
-| **Average Basket Value (ABV)** | Avg transaction value per customer | `Revenue / #Transactions` | Trend line & channel comparison |
-| **Sell-through %** | % of stocked items sold | `Units sold / Units received × 100` | SKU-level dashboards for merchandisers |
-| **Promotion ROI** | Profit generated per AED of discount spend | `(Incremental Sales – Discount Cost) / Discount Cost × 100` | Marketing & Promotions Insight Section |
-| **Customer Retention Rate** | % of customers making repeat purchases | `Repeat Customers / Total Customers × 100` | Customer Insights Dashboard |
-| **Forecast Accuracy (MAPE)** | Model accuracy for demand prediction | Compare predicted vs. actual sales | Model evaluation + KPI card for planning team |
+* SKU rotation; not all SKUs sell daily  
+* Random stockouts and partial fulfillment  
+* Missing customer IDs for anonymous purchases  
+* Promotions and discounts applied variably  
 
 ---
 
-## **Dashboard Structure Recommendations**
+## **Key KPIs**
 
-### **1. Executive Overview**
-- Total Revenue, GM%, and sales by channel  
-- Stockout / Fill rate alerts  
-- Average Basket Value (ABV) trend visualization  
-
-### **2. Channel Insights**
-- E-commerce vs. Store performance  
-- Marketplace (Amazon.ae, Noon) contribution  
-- Channel profitability and promotional performance  
-
-### **3. Inventory & Supply Chain**
-- Inventory turnover, sell-through, safety stock tracking  
-- Supplier lead time visualization and efficiency metrics  
-
-### **4. SKU & Category Performance**
-- Top-selling vs. slow-moving SKUs  
-- Seasonal demand spikes  
-- Promotion-driven uplift and margin impact  
-
-### **5. Forecasting & Inventory Planning**
-- ML-based demand forecasts with historical trends  
-- Forecast Accuracy (MAPE) metric  
-- Replenishment and safety stock recommendations based on predictive insights  
-
-### **6. Customer Insights (Derived from Analysis)**
-- Customer cohorts and loyalty segmentation  
-- Retention and repeat purchase rate trends  
-- Channel preference and high-value customer identification  
+| KPI                            | Description                    | Source / Calculation             | Dashboard Placement                |
+| ------------------------------ | ------------------------------ | -------------------------------- | ---------------------------------- |
+| **Total Revenue**              | Overall sales                  | qty × unit_price                 | Executive summary & trends         |
+| **Gross Margin %**             | Profitability                  | (Revenue – COGS)/Revenue ×100    | Revenue vs cost analysis           |
+| **Sales by Channel**           | Revenue per channel            | channel attribute                | Channel comparison charts          |
+| **Inventory Turnover**         | Stock efficiency               | COGS / Avg Inventory             | Heatmap by SKU/store               |
+| **Stockout Rate / Fill Rate**  | % demand met                   | Inventory snapshot + sales       | KPI cards / alerts                 |
+| **Average Basket Value (ABV)** | Avg transaction value          | Revenue / #Transactions          | Trends by channel & loyalty tier   |
+| **Sell-through %**             | % stock sold                   | Units sold / Units received ×100 | SKU-level dashboards               |
+| **Promotion ROI**              | Incremental sales per discount | Sales uplift vs discount cost    | Promotion planning                 |
+| **Customer Retention Rate**    | Repeat purchase behavior       | Repeat / Total customers         | Loyalty program evaluation         |
+| **Forecast Accuracy (MAPE)**   | Demand prediction              | Predicted vs actual sales        | Planning & replenishment dashboard |
 
 ---
 
-**Deliverable:**  
-A unified **AI-augmented analytics system** showcasing BlueMart’s transformation from data-rich to **insight-driven**, enabling smarter, faster, and more profitable decisions across its retail ecosystem.
+## **Analytical Approach**
+
+1. **Data Acquisition & Cleaning**  
+   * Generate realistic 1-year sales transactions  
+   * Handle missing customer IDs, stockouts, inconsistent discounts  
+   * Standardize SKU, store, and channel attributes  
+
+2. **Exploratory Data Analysis (EDA)**  
+   * Examine **sales trends** (daily, monthly, seasonal)  
+   * Analyze **SKU & category performance**, promotions impact  
+   * Explore **customer behavior**, ABV, loyalty tiers, and channel preference  
+
+3. **KPI Calculation & Aggregation**  
+   * Revenue, GM%, ABV, sell-through, stockouts, retention  
+   * Aggregated by store, channel, SKU, category, and month  
+
+4. **Forecasting & Inventory Optimization**  
+   * Predict next quarter SKU demand using **XGBoost/LightGBM**  
+   * Recommend **safety stock levels** per SKU/store  
+
+5. **Visualization & Reporting**  
+   * **Streamlit Dashboard** with:
+     * Executive Overview: revenue, GM%, ABV trends, stockout alerts  
+     * Channel Insights: store vs e-commerce, marketplace contributions  
+     * Inventory & Supply Chain: turnover, sell-through, safety stock  
+     * SKU & Category Performance: top/bottom SKUs, promotion impact  
+     * Forecast & Planning: predicted demand, MAPE, actionable replenishment suggestions  
+     * Customer Insights: cohorts, loyalty segmentation, repeat purchase trends  
+
+6. **Insights & Recommendations**  
+   * Stakeholder-specific recommendations for Sales, Marketing, Inventory, and Executive teams  
+   * Executive-ready summaries with clear headlines (e.g., “Sales peaked in Ramadan due to Grocery and Beverages promotions; slow movers identified in Electronics require targeted campaigns”)  
+
+---
+
+## **Expected Deliverables**
+
+1. **Cleaned & annotated dataset** (all tables)  
+2. **KPI tables & trend analysis**  
+3. **Forecasting outputs** (SKU demand & safety stock)  
+4. **Streamlit dashboard** (interactive, stakeholder-ready)  
+5. **Insight report** with actionable recommendations  
+6. **Portfolio presentation / Loom walkthrough** for hiring manager demonstration  
+
+---
+
+## **Why This Project Stands Out**
+
+* **Realistic Retail Context**: Reflects actual mid-sized retailer operations and constraints  
+* **Analytical Rigor**: Covers EDA, KPI calculation, forecasting, and optimization  
+* **Actionable Insights**: Recommendations mapped to stakeholders  
+* **Portfolio-Ready**: Clean visualizations, executive summaries, and storytelling  
+* **Memory-Efficient & Scalable**: 1-year dataset with 30 stores, ~1–1.5M transactions  
+
+---
+
+This project mirrors **what a real business analyst would do**, incorporates **realistic retail assumptions**, aligns with **hiring manager expectations**, and creates **portfolio-ready outputs**.

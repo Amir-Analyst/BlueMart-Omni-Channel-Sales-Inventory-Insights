@@ -1,0 +1,101 @@
+promo_id,promo_name,start_date,end_date,discount_pct,promo_type,target_type,target_value
+P0001,BOGO ALL 25%,2025-03-29,2025-04-11,25,BOGO,Storewide,ALL
+P0002,Bundle Beverages 30%,2025-10-01,2025-10-08,30,Bundle,Category,Beverages
+P0003,Flash Sale Skin 25%,2025-09-26,2025-10-02,25,Flash Sale,Subcategory,Skin
+P0004,Discount ALL 30%,2025-12-11,2025-12-24,30,Discount,Storewide,ALL
+P0005,Discount Electronics 15%,2025-03-31,2025-04-10,15,Discount,Category,Electronics
+P0006,Discount Electronics 20%,2025-12-01,2025-12-07,20,Discount,Category,Electronics
+P0007,Discount Nuts 15%,2025-11-19,2025-12-02,15,Discount,Subcategory,Nuts
+P0008,Flash Sale Frozen 5%,2025-04-02,2025-04-14,5,Flash Sale,Subcategory,Frozen
+P0009,Flash Sale Snacks 10%,2025-12-02,2025-12-09,10,Flash Sale,Category,Snacks
+P0010,BOGO Snacks 20%,2025-05-08,2025-05-15,20,BOGO,Category,Snacks
+P0011,Discount Kitchenware 5%,2025-05-30,2025-06-08,5,Discount,Subcategory,Kitchenware
+P0012,Discount Aroma 10%,2025-07-08,2025-07-19,10,Discount,Brand,Aroma
+P0013,Discount Electronics 25%,2025-03-29,2025-04-06,25,Discount,Category,Electronics
+P0014,Flash Sale ALL 20%,2025-11-30,2025-12-04,20,Flash Sale,Storewide,ALL
+P0015,Discount ALL 15%,2025-11-26,2025-12-05,15,Discount,Storewide,ALL
+P0016,Discount Grocery 20%,2025-02-09,2025-02-17,20,Discount,Category,Grocery
+P0017,Discount EcoHome 25%,2025-12-11,2025-12-29,25,Discount,Brand,EcoHome
+P0018,Discount ALL 10%,2025-12-04,2025-12-10,10,Discount,Storewide,ALL
+P0019,Bundle Aroma 10%,2025-02-25,2025-03-04,10,Bundle,Brand,Aroma
+P0020,Discount ALL 15%,2025-11-26,2025-11-29,15,Discount,Storewide,ALL
+P0021,Discount ALL 10%,2025-03-14,2025-03-19,10,Discount,Storewide,ALL
+P0022,Discount ALL 30%,2025-03-07,2025-03-13,30,Discount,Storewide,ALL
+P0023,Discount Yogurt 20%,2025-11-30,2025-12-05,20,Discount,Subcategory,Yogurt
+P0024,Discount ALL 15%,2025-03-16,2025-03-21,15,Discount,Storewide,ALL
+P0025,Discount Oral 20%,2025-05-13,2025-05-20,20,Discount,Subcategory,Oral
+P0026,Discount Household 15%,2025-12-12,2025-12-31,15,Discount,Category,Household
+P0027,Discount Snacks 10%,2025-02-24,2025-03-07,10,Discount,Category,Snacks
+P0028,Discount Hair 5%,2025-12-06,2025-12-17,5,Discount,Subcategory,Hair
+P0029,Discount Household 15%,2025-12-13,2025-12-24,15,Discount,Category,Household
+P0030,Bundle ALL 15%,2025-12-13,2025-12-30,15,Bundle,Storewide,ALL
+P0031,Discount Water 15%,2025-01-24,2025-02-06,15,Discount,Subcategory,Water
+P0032,Discount Snacks 30%,2025-03-13,2025-03-20,30,Discount,Category,Snacks
+P0033,BOGO Soft Drinks 30%,2025-03-17,2025-03-20,30,BOGO,Subcategory,Soft Drinks
+P0034,Discount Skin 20%,2025-12-04,2025-12-10,20,Discount,Subcategory,Skin
+P0035,Flash Sale Electronics 30%,2025-12-14,2025-12-26,30,Flash Sale,Category,Electronics
+P0036,Discount Electronics 10%,2025-12-11,2025-12-16,10,Discount,Category,Electronics
+P0037,Flash Sale Household 15%,2025-12-02,2025-12-08,15,Flash Sale,Category,Household
+P0038,Flash Sale Personal Care 15%,2025-03-24,2025-03-31,15,Flash Sale,Category,Personal Care
+P0039,Discount FreshFarm 30%,2025-12-14,2025-12-31,30,Discount,Brand,FreshFarm
+P0040,BOGO Beverages 10%,2025-12-03,2025-12-05,10,BOGO,Category,Beverages
+P0041,Flash Sale Staples 10%,2025-04-08,2025-04-12,10,Flash Sale,Subcategory,Staples
+P0042,BOGO ALL 15%,2025-11-30,2025-12-04,15,BOGO,Storewide,ALL
+P0043,Flash Sale HomeSense 10%,2025-09-19,2025-10-01,10,Flash Sale,Brand,HomeSense
+P0044,Discount Grocery 15%,2025-05-12,2025-05-25,15,Discount,Category,Grocery
+P0045,Discount Snacks 30%,2025-06-22,2025-07-05,30,Discount,Category,Snacks
+P0046,Discount Juices 10%,2025-01-21,2025-02-02,10,Discount,Subcategory,Juices
+P0047,Bundle DailyDelight 30%,2025-03-18,2025-03-21,30,Bundle,Brand,DailyDelight
+P0048,Discount Grocery 25%,2025-03-22,2025-04-03,25,Discount,Category,Grocery
+P0049,Flash Sale ALL 10%,2025-11-28,2025-12-01,10,Flash Sale,Storewide,ALL
+P0050,BOGO CarePlus 25%,2025-11-28,2025-12-03,25,BOGO,Brand,CarePlus
+P0051,Discount ALL 10%,2025-10-13,2025-10-23,10,Discount,Storewide,ALL
+P0052,Bundle Electronics 30%,2025-11-27,2025-12-04,30,Bundle,Category,Electronics
+P0053,Discount Cleaning 15%,2025-11-26,2025-12-02,15,Discount,Subcategory,Cleaning
+P0054,Discount Cleaning 20%,2025-12-13,2025-12-20,20,Discount,Subcategory,Cleaning
+P0055,Discount Milk 25%,2025-12-14,2025-12-20,25,Discount,Subcategory,Milk
+P0056,Flash Sale NovaTech 20%,2025-12-03,2025-12-10,20,Flash Sale,Brand,NovaTech
+P0057,BOGO Beverages 20%,2025-09-17,2025-09-28,20,BOGO,Category,Beverages
+P0058,Bundle PureLife 15%,2025-01-13,2025-01-23,15,Bundle,Brand,PureLife
+P0059,Discount Staples 25%,2025-12-18,2025-12-31,25,Discount,Subcategory,Staples
+P0060,Flash Sale Oral 40%,2025-02-02,2025-02-14,40,Flash Sale,Subcategory,Oral
+P0061,Flash Sale Snacks 10%,2025-08-18,2025-08-28,10,Flash Sale,Category,Snacks
+P0062,Discount Personal Care 30%,2025-07-11,2025-07-23,30,Discount,Category,Personal Care
+P0063,BOGO CarePlus 20%,2025-02-26,2025-03-02,20,BOGO,Brand,CarePlus
+P0064,Bundle Electronics 10%,2025-11-29,2025-12-05,10,Bundle,Category,Electronics
+P0065,Discount Cleaning 15%,2025-03-21,2025-03-31,15,Discount,Subcategory,Cleaning
+P0066,Bundle Biscuits 15%,2025-11-30,2025-12-09,15,Bundle,Subcategory,Biscuits
+P0067,Discount SunValley 10%,2025-06-23,2025-07-01,10,Discount,Brand,SunValley
+P0068,Discount ALL 20%,2025-11-28,2025-12-02,20,Discount,Storewide,ALL
+P0069,BOGO ALL 25%,2025-05-05,2025-05-13,25,BOGO,Storewide,ALL
+P0070,Discount Snacks 15%,2025-07-16,2025-07-27,15,Discount,Category,Snacks
+P0071,Discount BlueMart 10%,2025-10-14,2025-10-26,10,Discount,Brand,BlueMart
+P0072,Discount ALL 30%,2025-12-04,2025-12-11,30,Discount,Storewide,ALL
+P0073,Flash Sale BlueMart 15%,2025-08-06,2025-08-13,15,Flash Sale,Brand,BlueMart
+P0074,Discount ALL 10%,2025-12-02,2025-12-06,10,Discount,Storewide,ALL
+P0075,Bundle ALL 25%,2025-10-23,2025-10-31,25,Bundle,Storewide,ALL
+P0076,Bundle EcoHome 20%,2025-03-24,2025-03-29,20,Bundle,Brand,EcoHome
+P0077,Discount Beverages 20%,2025-05-27,2025-06-07,20,Discount,Category,Beverages
+P0078,Discount Personal Care 25%,2025-04-16,2025-04-24,25,Discount,Category,Personal Care
+P0079,Discount Staples 40%,2025-11-29,2025-12-06,40,Discount,Subcategory,Staples
+P0080,Discount DailyDelight 15%,2025-12-02,2025-12-08,15,Discount,Brand,DailyDelight
+P0081,BOGO Nuts 20%,2025-06-14,2025-06-23,20,BOGO,Subcategory,Nuts
+P0082,Discount Electronics 30%,2025-07-27,2025-08-09,30,Discount,Category,Electronics
+P0083,Flash Sale BlueMart 15%,2025-02-14,2025-02-23,15,Flash Sale,Brand,BlueMart
+P0084,Discount ALL 25%,2025-11-27,2025-12-05,25,Discount,Storewide,ALL
+P0085,Discount ALL 25%,2025-05-31,2025-06-05,25,Discount,Storewide,ALL
+P0086,Discount Personal Care 40%,2025-08-08,2025-08-15,40,Discount,Category,Personal Care
+P0087,BOGO Electronics 20%,2025-12-12,2025-12-20,20,BOGO,Category,Electronics
+P0088,Discount Dairy 10%,2025-11-30,2025-12-13,10,Discount,Category,Dairy
+P0089,Discount Chips 40%,2025-11-09,2025-11-13,40,Discount,Subcategory,Chips
+P0090,Flash Sale NovaTech 10%,2025-12-01,2025-12-04,10,Flash Sale,Brand,NovaTech
+P0091,Discount EcoHome 20%,2025-02-27,2025-03-02,20,Discount,Brand,EcoHome
+P0092,Discount Electronics 20%,2025-09-23,2025-09-30,20,Discount,Category,Electronics
+P0093,BOGO ALL 30%,2025-08-18,2025-08-27,30,BOGO,Storewide,ALL
+P0094,Flash Sale ALL 30%,2025-12-08,2025-12-17,30,Flash Sale,Storewide,ALL
+P0095,BOGO Grove 10%,2025-03-20,2025-03-27,10,BOGO,Brand,Grove
+P0096,Discount Household 15%,2025-03-15,2025-03-19,15,Discount,Category,Household
+P0097,Flash Sale NovaTech 10%,2025-10-05,2025-10-16,10,Flash Sale,Brand,NovaTech
+P0098,Discount Chips 10%,2025-07-17,2025-07-30,10,Discount,Subcategory,Chips
+P0099,Bundle DailyDelight 15%,2025-03-10,2025-03-13,15,Bundle,Brand,DailyDelight
+P0100,Bundle Milk 10%,2025-06-11,2025-06-19,10,Bundle,Subcategory,Milk

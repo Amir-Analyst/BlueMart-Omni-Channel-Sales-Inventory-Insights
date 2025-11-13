@@ -1,0 +1,167 @@
+# ==========================================================
+# 📘 BLUEMART DATA PREPARATION & INTEGRATION PIPELINE
+# Stage 2 of Analyst's Compass Framework: Data Preparation
+# Author: Amir | Project: BlueMart Retail Omni-Channel Analytics
+# ==========================================================
+
+# --- STEP 0: Setup Environment ---
+import pandas as pd
+import numpy as np
+import os
+from datetime import datetime
+
+# Mount Google Drive (if using Colab)
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Define base dataset path (update if needed)
+DATA_PATH = "/content/drive/MyDrive/Amir/work/Data Science/project/dataset/bluemart"
+
+# Utility function for summary printing
+def print_summary(df, name):
+    print(f"\n--- {name} ---")
+    print(f"Shape: {df.shape}")
+    print(f"Columns: {list(df.columns)}")
+    print(f"Missing values:\n{df.isna().sum()}")
+    print(f"Duplicated rows: {df.duplicated().sum()}")
+
+# ==========================================================
+# STEP 1 — Data Extraction & Verification
+# ==========================================================
+
+store = pd.read_csv(f"{DATA_PATH}/store_master.csv", parse_dates=['opening_date'])
+sku = pd.read_csv(f"{DATA_PATH}/sku_master.csv")
+cust = pd.read_csv(f"{DATA_PATH}/customer_master.csv", parse_dates=['registration_date'])
+promo = pd.read_csv(f"{DATA_PATH}/promotions.csv", parse_dates=['start_date', 'end_date'])
+inv = pd.read_csv(f"{DATA_PATH}/inventory_snapshot.csv", parse_dates=['last_restock_date'])
+sales = pd.read_csv(f"{DATA_PATH}/sales_transactions.csv", parse_dates=['date'])
+
+# Basic shape & null check
+for df, name in zip([store, sku, cust, promo, inv, sales],
+                    ['store_master', 'sku_master', 'customer_master', 'promotions', 'inventory_snapshot', 'sales_transactions']):
+    print_summary(df, name)
+
+# ==========================================================
+# STEP 2 — Data Cleaning & Normalization
+# ==========================================================
+
+# Standardize column names
+def clean_columns(df):
+    df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+    return df
+
+store = clean_columns(store)
+sku = clean_columns(sku)
+cust = clean_columns(cust)
+promo = clean_columns(promo)
+inv = clean_columns(inv)
+sales = clean_columns(sales)
+
+# Handle missing values
+sales['discount_pct'] = sales['discount_pct'].fillna(0)
+sales['promo_id'] = sales['promo_id'].fillna('NA')
+
+# Standardize categorical text
+for col in ['city', 'store_type', 'gender', 'preferred_channel', 'loyalty_segment']:
+    if col in cust.columns:
+        cust[col] = cust[col].astype(str).str.title()
+
+# Validate numeric consistency
+sales = sales[sales['total_value'] >= 0]
+inv = inv[inv['stock_on_hand'] >= 0]
+
+# ==========================================================
+# STEP 3 — Relationship Integration
+# ==========================================================
+
+# Merge sequentially to build enriched dataset
+sales_enriched = (
+    sales
+    .merge(store, on='store_id', how='left')
+    .merge(sku, on='sku_id', how='left')
+    .merge(cust, left_on='customer_id', right_on='cust_id', how='left')
+    .merge(promo, on='promo_id', how='left')
+)
+
+print("\n✅ Enriched dataset shape:", sales_enriched.shape)
+print(sales_enriched.head(3))
+
+# --- 🔧 FIX FOR DUPLICATE COLUMN NAMES (KeyError: 'unit_price') ---
+if 'unit_price_x' in sales_enriched.columns:
+    sales_enriched['unit_price'] = sales_enriched['unit_price_x']
+elif 'unit_price_y' in sales_enriched.columns:
+    sales_enriched['unit_price'] = sales_enriched['unit_price_y']
+
+if 'discount_pct_x' in sales_enriched.columns:
+    sales_enriched['discount_pct'] = sales_enriched['discount_pct_x']
+elif 'discount_pct_y' in sales_enriched.columns:
+    sales_enriched['discount_pct'] = sales_enriched['discount_pct_y']
+
+cols_to_drop = [c for c in ['unit_price_x', 'unit_price_y', 'discount_pct_x', 'discount_pct_y'] if c in sales_enriched.columns]
+sales_enriched.drop(columns=cols_to_drop, inplace=True)
+
+# ==========================================================
+# STEP 4 — Derived Feature Engineering
+# ==========================================================
+
+# Basic derived KPIs
+sales_enriched['gross_margin'] = sales_enriched['unit_price'] - sales_enriched['cost_price']
+sales_enriched['revenue'] = sales_enriched['quantity'] * sales_enriched['unit_price']
+sales_enriched['profit'] = sales_enriched['quantity'] * sales_enriched['gross_margin']
+sales_enriched['is_discounted'] = (sales_enriched['discount_pct'] > 0).astype(int)
+
+# Date-based features
+sales_enriched['month'] = sales_enriched['date'].dt.month
+sales_enriched['quarter'] = sales_enriched['date'].dt.quarter
+sales_enriched['day_of_week'] = sales_enriched['date'].dt.day_name()
+
+# Customer age segmentation
+bins = [0, 25, 40, 60, 100]
+labels = ['Youth', 'Adult', 'Middle Age', 'Senior']
+sales_enriched['age_segment'] = pd.cut(sales_enriched['age'], bins=bins, labels=labels, include_lowest=True)
+
+# Store tenure
+sales_enriched['store_tenure_years'] = round((pd.Timestamp("2025-12-31") - sales_enriched['opening_date']).dt.days / 365, 1)
+
+# ==========================================================
+# STEP 5 — Data Validation Summary
+# ==========================================================
+
+print("\n--- DATA VALIDATION CHECKS ---")
+
+# 1. Orphan key checks
+print("Missing store references:", sales_enriched['store_id'].isna().sum())
+print("Missing SKU references:", sales_enriched['sku_id'].isna().sum())
+print("Missing Customer references:", sales_enriched['cust_id'].isna().sum())
+
+# 2. Aggregate check
+total_revenue = sales_enriched['revenue'].sum()
+total_sales = sales_enriched['total_value'].sum()
+print(f"Revenue check: {round(total_revenue, 2)} vs. {round(total_sales, 2)}")
+
+# 3. Time coverage
+print("Min Date:", sales_enriched['date'].min(), "| Max Date:", sales_enriched['date'].max())
+
+# 4. Missing value report (top 10 cols)
+print("\nTop missing values:")
+print(sales_enriched.isna().sum().sort_values(ascending=False).head(10))
+
+# ==========================================================
+# STEP 6 — Save Cleaned & Integrated Outputs
+# ==========================================================
+
+OUTPUT_PATH = f"{DATA_PATH}/processed"
+os.makedirs(OUTPUT_PATH, exist_ok=True)
+
+store.to_csv(f"{OUTPUT_PATH}/store_master_clean.csv", index=False)
+sku.to_csv(f"{OUTPUT_PATH}/sku_master_clean.csv", index=False)
+cust.to_csv(f"{OUTPUT_PATH}/customer_master_clean.csv", index=False)
+promo.to_csv(f"{OUTPUT_PATH}/promotions_clean.csv", index=False)
+inv.to_csv(f"{OUTPUT_PATH}/inventory_snapshot_clean.csv", index=False)
+sales_enriched.to_csv(f"{OUTPUT_PATH}/sales_enriched.csv", index=False)
+
+print(f"\n✅ All cleaned and enriched datasets saved under: {OUTPUT_PATH}")
+
+# ==========================================================
+# END OF PIPELINE
+# ==========================================================

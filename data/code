@@ -1,202 +1,543 @@
 !pip install faker
-!pip install streamlit
 
-# BlueMart Synthetic Dataset Generator
-# Author: Amir Khan
-# Purpose: Generate realistic UAE retail + e-commerce data (2018–2025)
-# Python 3.x, dependencies: pandas, numpy, faker
-
-import pandas as pd
-import numpy as np
-from faker import Faker
+import os
+import math
 import random
-import datetime
+from datetime import datetime, timedelta
+from collections import defaultdict
 
-# -----------------------------
-# 1. Set seed for reproducibility
-# -----------------------------
-SEED = 42
-np.random.seed(SEED)
-random.seed(SEED)
-faker = Faker()
-Faker.seed(SEED)
+import numpy as np
+import pandas as pd
+from faker import Faker
 
-# -----------------------------
-# 2. Configuration
-# -----------------------------
-# Convert to datetime.date objects for Faker
-START_DATE = datetime.date(2018, 1, 1)
-END_DATE = datetime.date(2025, 9, 30)
-DATE_RANGE = pd.date_range(START_DATE, END_DATE, freq='D')
+# =========================
+# REPRODUCIBILITY & SETUP
+# =========================
 
-NUM_STORES = 12
-NUM_SKUS = 200
-NUM_SUPPLIERS = 20
-NUM_PROMOS = 10
-CHANNELS = ['store', 'website', 'app', 'marketplace', 'click_collect']
-STORE_TYPES = ['mall', 'neighborhood']
-CATEGORIES = ['Groceries', 'Electronics', 'Apparel', 'Health/Beauty', 'Home', 'Accessories']
+np.random.seed(42)
+random.seed(42)
+fake = Faker()
+Faker.seed(42)
 
-# -----------------------------
-# 3. Generate Stores
-# -----------------------------
-stores = []
-for i in range(NUM_STORES):
-    store = {
-        'store_id': i+1,
-        'store_name': f'BlueMart {faker.city()} {random.choice(["Mall", "Street"])}',
-        'emirate': random.choice(['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman']),
-        'store_type': random.choice(STORE_TYPES),
-        'store_size_sqm': np.random.randint(200, 2000),
-        'estimated_footfall': np.random.randint(500, 5000),
-        'opening_date': faker.date_between(start_date=datetime.date(2015,1,1), end_date=datetime.date.today())
-    }
-    stores.append(store)
-stores_df = pd.DataFrame(stores)
+DATA_DIR = "./data"
+os.makedirs(DATA_DIR, exist_ok=True)
 
-# -----------------------------
-# 4. Generate Suppliers
-# -----------------------------
-suppliers = []
-for i in range(NUM_SUPPLIERS):
-    suppliers.append({
-        'supplier_id': i+1,
-        'supplier_name': f'Supplier {faker.company()}',
-        'lead_time_days': np.random.randint(2, 21),
-        'reliability_score': round(np.random.uniform(0.7, 1.0), 2)
-    })
-suppliers_df = pd.DataFrame(suppliers)
+# Target total number of sales *rows* (line items)
+TARGET_LINE_ITEMS = 1_200_000  # stay between 1M-1.5M as requested
+AVG_BASKET_SIZE = 6  # average SKUs per receipt (between 5-7)
 
-# -----------------------------
-# 5. Generate SKUs
-# -----------------------------
-skus = []
-for i in range(NUM_SKUS):
-    category = random.choice(CATEGORIES)
-    sku = {
-        'sku_id': i+1,
-        'sku_name': f'{faker.word().title()} {category}',
-        'category': category,
-        'subcategory': faker.word().title(),
-        'unit_cost': round(np.random.uniform(10, 200), 2),
-        'retail_price': 0,  # to compute next
-        'supplier_id': random.randint(1, NUM_SUPPLIERS),
-        'reorder_point': np.random.randint(10, 50),
-        'safety_stock': np.random.randint(5, 20)
-    }
-    sku['retail_price'] = round(sku['unit_cost'] * np.random.uniform(1.15, 1.5), 2)
-    skus.append(sku)
-skus_df = pd.DataFrame(skus)
+# Derived receipts target
+TARGET_RECEIPTS = int(TARGET_LINE_ITEMS / AVG_BASKET_SIZE)
 
-# -----------------------------
-# 6. Generate Promotions
-# -----------------------------
-promos = []
-for i in range(NUM_PROMOS):
-    promo_type = random.choice(['discount', 'bogo', 'clearance'])
-    start = faker.date_between(start_date=START_DATE, end_date=END_DATE)
-    end = pd.to_datetime(start) + pd.Timedelta(days=random.randint(3, 14))
-    promos.append({
-        'promo_id': i+1,
-        'promo_name': f'{promo_type.title()} Promo {i+1}',
-        'start_date': start,
-        'end_date': end,
-        'promo_type': promo_type,
-        'sku_ids': random.sample(range(1, NUM_SKUS+1), random.randint(5, 20)),
-        'channels': random.sample(CHANNELS, random.randint(1, len(CHANNELS))),
-        'multiplier_effect': round(np.random.uniform(1.1, 1.5), 2)
-    })
-promos_df = pd.DataFrame(promos)
+# Date range
+START_DATE = datetime(2025, 1, 1)
+END_DATE = datetime(2025, 12, 31)
+ALL_DATES = pd.date_range(START_DATE, END_DATE, freq="D")
 
-promos_df['start_date'] = pd.to_datetime(promos_df['start_date'])
-promos_df['end_date'] = pd.to_datetime(promos_df['end_date'])
+# Channel distribution
+CHANNELS = ["Store", "Website", "Mobile", "Marketplace"]
+CHANNEL_PROBS = [0.70, 0.20, 0.08, 0.02]  # approximations (sum to 1)
 
-# -----------------------------
-# 7. Generate Transactions
-# -----------------------------
-transactions = []
-transaction_id = 1
+# SKU categories and example subcategories & brands
+CATEGORIES = {
+    "Grocery": ["Staples", "Cooking", "Frozen"],
+    "Beverages": ["Soft Drinks", "Juices", "Water"],
+    "Personal Care": ["Skin", "Hair", "Oral"],
+    "Household": ["Cleaning", "Kitchenware", "Laundry"],
+    "Snacks": ["Chips", "Nuts", "Biscuits"],
+    "Dairy": ["Milk", "Cheese", "Yogurt"],
+    "Electronics": ["Accessories", "Home Audio", "Small Appliances"]
+}
+BRANDS_SAMPLE = [
+    "BlueMart", "PureLife", "HomeSense", "FreshFarm", "Grove", "NovaTech",
+    "CarePlus", "SunValley", "DailyDelight", "PrimeChoice", "Aroma", "EcoHome"
+]
 
-# Base daily sales per SKU
-base_sales = {sku_id: np.random.randint(1,5) for sku_id in skus_df['sku_id']}
+# Stores configuration
+STORE_CITIES = ["Dubai", "Abu Dhabi", "Sharjah"]
+STORE_TYPES = ["Mall", "High Street", "Community"]
+NUM_STORES = 30
 
-# Seasonality multipliers (simplified example)
-def get_season_multiplier(date):
-    month = date.month
-    if month in [11,12]:  # Dubai Shopping Festival / Black Friday
-        return 1.3
-    if month in [4,5]:   # Ramadan approx
-        return 1.25
-    if month == 12:       # National Day
-        return 1.2
-    return 1.0
+# SKU and customer universe sizes
+NUM_SKUS = 5000
+NUM_CUSTOMERS = 10_000
 
-for date in DATE_RANGE:
-    season_multiplier = get_season_multiplier(date)
-    for sku_id in skus_df['sku_id']:
-        qty = max(0, int(np.random.poisson(base_sales[sku_id] * season_multiplier)))
-        if qty == 0:
-            continue
-        # Random store and channel
-        store_id = random.randint(1, NUM_STORES)
-        channel = random.choices(CHANNELS, weights=[0.4,0.2,0.2,0.15,0.05])[0]
-        # Random promo applied
-        applicable_promos = promos_df[(promos_df['start_date'] <= date) &
-                                      (promos_df['end_date'] >= date) &
-                                      (promos_df['channels'].apply(lambda x: channel in x)) &
-                                      (promos_df['sku_ids'].apply(lambda x: sku_id in x))]
-        if not applicable_promos.empty:
-            promo = applicable_promos.sample(1).iloc[0]
-            unit_price = skus_df.loc[skus_df['sku_id']==sku_id, 'retail_price'].values[0] / promo['multiplier_effect']
-            promo_id_val = promo['promo_id']
-        else:
-            unit_price = skus_df.loc[skus_df['sku_id']==sku_id, 'retail_price'].values[0]
-            promo_id_val = np.nan
+# Inventory snapshot target ~20k rows
+AVG_ACTIVE_SKUS_PER_STORE = 700
 
-        transactions.append({
-            'transaction_id': transaction_id,
-            'date': date,
-            'store_id': store_id,
-            'sku_id': sku_id,
-            'quantity': qty,
-            'unit_price': round(unit_price,2),
-            'channel': channel,
-            'promo_id': promo_id_val,
-            'total_amount': round(qty * unit_price,2),
-            'customer_id': np.nan
+# Promotions: ~100 events/year
+NUM_PROMOS = 100
+
+# Seasonal event dates
+RAMADAN_START = datetime(2025, 3, 1)
+RAMADAN_END = datetime(2025, 3, 30)
+EID_AL_FITR = datetime(2025, 3, 30)
+EID_AL_ADHA_START = datetime(2025, 6, 6)
+EID_AL_ADHA_END = datetime(2025, 6, 8)
+BLACK_FRIDAY = datetime(2025, 11, 28)
+UAE_NATIONAL_DAY = datetime(2025, 12, 2)
+DSF_START = datetime(2025, 12, 5)
+
+
+# =========================
+# SEASONALITY MULTIPLIER
+# =========================
+def get_seasonality_multiplier(date):
+    """Return a multiplier for receipts/sales based on seasonality and holidays."""
+    multiplier = 1.0
+    weekday = date.weekday()  # Monday=0 ... Sunday=6
+
+    if weekday == 4:  # Friday
+        multiplier *= 1.10
+    if weekday == 5:  # Saturday
+        multiplier *= 1.05
+
+    # Ramadan uplift
+    if RAMADAN_START <= date <= RAMADAN_END:
+        multiplier *= 1.10
+    # Eid al-Fitr
+    if EID_AL_FITR - timedelta(days=1) <= date <= EID_AL_FITR + timedelta(days=2):
+        multiplier *= 1.5
+    # Eid al-Adha
+    if EID_AL_ADHA_START <= date <= EID_AL_ADHA_END:
+        multiplier *= 1.35
+    # Black Friday
+    if BLACK_FRIDAY - timedelta(days=2) <= date <= BLACK_FRIDAY + timedelta(days=2):
+        multiplier *= 1.6
+    # UAE National Day
+    if UAE_NATIONAL_DAY - timedelta(days=1) <= date <= UAE_NATIONAL_DAY + timedelta(days=1):
+        multiplier *= 1.3
+    # Dubai Shopping Festival
+    if date >= DSF_START and date <= datetime(2026, 1, 11):
+        multiplier *= 1.2
+    # End-of-month uplift
+    if date.day >= 25:
+        multiplier *= 1.05
+
+    return multiplier
+
+
+# =========================
+# MASTER TABLE GENERATORS
+# =========================
+def generate_store_master(num_stores=NUM_STORES):
+    stores = []
+    city_counts = {"Dubai": 14, "Abu Dhabi": 10, "Sharjah": 6}
+    store_id = 1
+    for city in STORE_CITIES:
+        count = city_counts.get(city, max(1, num_stores // len(STORE_CITIES)))
+        for i in range(count):
+            opening_year = np.random.randint(2000, 2024)
+            opening_date = datetime(opening_year, np.random.randint(1, 13), np.random.randint(1, 28))
+            store = {
+                "store_id": f"S{store_id:03d}",
+                "store_name": f"BlueMart {city[:3].upper()} {i+1}",
+                "city": city,
+                "store_type": np.random.choice(STORE_TYPES, p=[0.5, 0.3, 0.2]),
+                "opening_date": opening_date.date().isoformat()
+            }
+            stores.append(store)
+            store_id += 1
+    if len(stores) > num_stores:
+        stores = stores[:num_stores]
+    while len(stores) < num_stores:
+        city = np.random.choice(STORE_CITIES)
+        opening_year = np.random.randint(2000, 2024)
+        opening_date = datetime(opening_year, np.random.randint(1, 13), np.random.randint(1, 28))
+        store_id = len(stores) + 1
+        stores.append({
+            "store_id": f"S{store_id:03d}",
+            "store_name": f"BlueMart {city[:3].upper()} {store_id}",
+            "city": city,
+            "store_type": np.random.choice(STORE_TYPES),
+            "opening_date": opening_date.date().isoformat()
         })
-        transaction_id += 1
+    df = pd.DataFrame(stores)
+    df.to_csv(os.path.join(DATA_DIR, "store_master.csv"), index=False)
+    return df
 
-transactions_df = pd.DataFrame(transactions)
 
-# -----------------------------
-# 8. Generate Inventory Movements (simplified)
-# -----------------------------
-inventory_movements = []
-movement_id = 1
-for index, row in transactions_df.iterrows():
-    inventory_movements.append({
-        'movement_id': movement_id,
-        'date': row['date'],
-        'store_id': row['store_id'],
-        'sku_id': row['sku_id'],
-        'movement_type': 'sale',
-        'quantity': row['quantity'],
-        'source_id': np.nan,
-        'notes': 'POS Sale'
-    })
-    movement_id += 1
+def generate_sku_master(num_skus=NUM_SKUS):
+    skus = []
+    for i in range(1, num_skus + 1):
+        category = np.random.choice(list(CATEGORIES.keys()))
+        subcategory = np.random.choice(CATEGORIES[category])
+        brand = np.random.choice(BRANDS_SAMPLE)
+        base_cost = {
+            "Grocery": np.random.uniform(2, 50),
+            "Beverages": np.random.uniform(1, 30),
+            "Personal Care": np.random.uniform(5, 60),
+            "Household": np.random.uniform(5, 100),
+            "Snacks": np.random.uniform(1, 25),
+            "Dairy": np.random.uniform(1, 40),
+            "Electronics": np.random.uniform(20, 500)
+        }[category]
+        cost_price = round(base_cost * np.random.uniform(0.85, 1.25), 2)
+        markup = np.random.uniform(1.2, 1.8)
+        unit_price = round(cost_price * markup, 2)
+        skus.append({
+            "sku_id": f"SKU{i:05d}",
+            "sku_name": f"{brand} {subcategory[:6].capitalize()} {i}",
+            "category": category,
+            "subcategory": subcategory,
+            "unit_price": unit_price,
+            "cost_price": cost_price,
+            "brand": brand
+        })
+    df = pd.DataFrame(skus)
+    df.to_csv(os.path.join(DATA_DIR, "sku_master.csv"), index=False)
+    return df
 
-inventory_movements_df = pd.DataFrame(inventory_movements)
 
-# -----------------------------
-# 9. Export CSVs
-# -----------------------------
-stores_df.to_csv('stores.csv', index=False)
-suppliers_df.to_csv('suppliers.csv', index=False)
-skus_df.to_csv('skus.csv', index=False)
-promos_df.to_csv('promotions.csv', index=False)
-transactions_df.to_csv('transactions.csv', index=False)
-inventory_movements_df.to_csv('inventory_movements.csv', index=False)
+def generate_customer_master(num_customers=NUM_CUSTOMERS):
+    customers = []
+    for i in range(1, num_customers + 1):
+        cust_id = f"C{100000 + i}"
+        age = int(np.clip(np.random.normal(35, 10), 18, 75))
+        gender = np.random.choice(["Male", "Female", "Other"], p=[0.48, 0.48, 0.04])
+        city = np.random.choice(STORE_CITIES, p=[0.6, 0.3, 0.1])
+        loyalty_segment = np.random.choice(["Silver", "Gold", "Platinum"], p=[0.6, 0.3, 0.1])
+        preferred_channel = np.random.choice(CHANNELS, p=CHANNEL_PROBS)
+        reg_year = np.random.randint(2015, 2025)
+        reg_month = np.random.randint(1, 13)
+        reg_day = np.random.randint(1, 28)
+        registration_date = datetime(reg_year, reg_month, reg_day).date().isoformat()
+        customers.append({
+            "cust_id": cust_id,
+            "age": age,
+            "gender": gender,
+            "city": city,
+            "loyalty_segment": loyalty_segment,
+            "preferred_channel": preferred_channel,
+            "registration_date": registration_date
+        })
+    df = pd.DataFrame(customers)
+    df.to_csv(os.path.join(DATA_DIR, "customer_master.csv"), index=False)
+    return df
 
-print("Synthetic dataset generation complete!")
+# =========================
+# PROMOTIONS, INVENTORY & SALES
+# =========================
+
+def generate_promotions(sku_df, num_promos=NUM_PROMOS):
+    """Create ~100 promotions across the year, some targeted to categories/subcategories."""
+    promos = []
+    promo_id = 1
+    promo_types = ["Discount", "Flash Sale", "Bundle", "BOGO"]
+    possible_start_dates = list(ALL_DATES)
+
+    for _ in range(num_promos):
+        r = np.random.rand()
+        if r < 0.15:
+            start = RAMADAN_START + timedelta(days=np.random.randint(0, (RAMADAN_END - RAMADAN_START).days + 1))
+            duration = np.random.randint(3, 10)
+        elif r < 0.25:
+            start = BLACK_FRIDAY + timedelta(days=np.random.randint(-5, 3))
+            duration = np.random.randint(3, 10)
+        elif r < 0.35:
+            start = DSF_START + timedelta(days=np.random.randint(0, 10))
+            duration = np.random.randint(5, 20)
+        elif r < 0.45:
+            start = UAE_NATIONAL_DAY + timedelta(days=np.random.randint(-2, 3))
+            duration = np.random.randint(2, 8)
+        else:
+            start = np.random.choice(possible_start_dates)
+            duration = np.random.randint(3, 14)
+
+        end = min(start + timedelta(days=duration), END_DATE)
+        discount_pct = int(np.random.choice([5, 10, 15, 20, 25, 30, 40], p=[0.05,0.2,0.25,0.2,0.15,0.1,0.05]))
+        ptype = np.random.choice(promo_types, p=[0.6, 0.15, 0.15, 0.1])
+        target_type = np.random.choice(["Category", "Subcategory", "Brand", "Storewide"], p=[0.4, 0.2, 0.2, 0.2])
+
+        if target_type == "Category":
+            target_value = np.random.choice(list(CATEGORIES.keys()))
+        elif target_type == "Subcategory":
+            cat = np.random.choice(list(CATEGORIES.keys()))
+            target_value = np.random.choice(CATEGORIES[cat])
+        elif target_type == "Brand":
+            target_value = np.random.choice(BRANDS_SAMPLE)
+        else:
+            target_value = "ALL"
+
+        promo = {
+            "promo_id": f"P{promo_id:04d}",
+            "promo_name": f"{ptype} {target_value} {discount_pct}%",
+            "start_date": start.date().isoformat(),
+            "end_date": end.date().isoformat(),
+            "discount_pct": discount_pct,
+            "promo_type": ptype,
+            "target_type": target_type,
+            "target_value": target_value
+        }
+        promos.append(promo)
+        promo_id += 1
+
+    df = pd.DataFrame(promos)
+    df.to_csv(os.path.join(DATA_DIR, "promotions.csv"), index=False)
+    return df
+
+
+def generate_inventory_snapshot(store_df, sku_df):
+    """Produce inventory snapshot for active SKUs in each store (~avg 700 per store for ~21k rows)."""
+    rows = []
+    for _, store in store_df.iterrows():
+        active_count = int(np.random.randint(600, 800))  # per store active SKUs
+        skus_for_store = sku_df.sample(active_count, replace=False)
+        for _, sku in skus_for_store.iterrows():
+            # Base stock by category
+            base = {
+                "Grocery": np.random.randint(20, 200),
+                "Beverages": np.random.randint(10, 150),
+                "Personal Care": np.random.randint(10, 120),
+                "Household": np.random.randint(5, 80),
+                "Snacks": np.random.randint(10, 150),
+                "Dairy": np.random.randint(10, 120),
+                "Electronics": np.random.randint(1, 20)
+            }[sku["category"]]
+            stock_on_hand = int(max(0, np.random.normal(loc=base, scale=max(1, base * 0.2))))
+            reorder_point = max(1, int(stock_on_hand * np.random.uniform(0.1, 0.3)))
+            safety_stock = max(1, int(reorder_point * np.random.uniform(0.5, 1.0)))
+            last_restock_date = START_DATE + timedelta(days=np.random.randint(0, (END_DATE - START_DATE).days + 1))
+
+            rows.append({
+                "store_id": store["store_id"],
+                "sku_id": sku["sku_id"],
+                "stock_on_hand": int(stock_on_hand),
+                "reorder_point": int(reorder_point),
+                "safety_stock": int(safety_stock),
+                "last_restock_date": last_restock_date.date().isoformat()
+            })
+
+    df = pd.DataFrame(rows)
+    # Trim/limit to approximately ~22k rows if required for size realism
+    if len(df) > 25_000:
+        df = df.sample(22_000, random_state=42).reset_index(drop=True)
+    df.to_csv(os.path.join(DATA_DIR, "inventory_snapshot.csv"), index=False)
+    return df
+
+
+def apply_promotion_to_sku(promos_df, sku_row, date):
+    """Return applicable promotion discount_pct and promo_id for this sku on this date, else (0, None)."""
+    date_iso = date.date().isoformat()
+    applicable = promos_df[(promos_df["start_date"] <= date_iso) & (promos_df["end_date"] >= date_iso)]
+    if applicable.empty:
+        return 0, None
+
+    best_discount = 0
+    best_promo_id = None
+    for _, promo in applicable.iterrows():
+        tt = promo["target_type"]
+        tv = promo["target_value"]
+        match = False
+        if tt == "Storewide":
+            match = True
+        elif tt == "Category" and sku_row["category"] == tv:
+            match = True
+        elif tt == "Subcategory" and sku_row["subcategory"] == tv:
+            match = True
+        elif tt == "Brand" and sku_row["brand"] == tv:
+            match = True
+
+        if match and promo["discount_pct"] > best_discount:
+            best_discount = promo["discount_pct"]
+            best_promo_id = promo["promo_id"]
+
+    return int(best_discount), best_promo_id
+
+
+def generate_sales_transactions(store_df, sku_df, cust_df, promos_df, inventory_df,
+                                target_line_items=TARGET_LINE_ITEMS, avg_basket=AVG_BASKET_SIZE):
+    """
+    Generate sales transactions as line items. Stream to CSV in chunks to manage memory.
+    Returns total rows written.
+    """
+    sales_file = os.path.join(DATA_DIR, "sales_transactions.csv")
+    if os.path.exists(sales_file):
+        os.remove(sales_file)
+
+    chunk_size = 100_000
+    buffer_rows = []
+    total_rows = 0
+    receipt_id_counter = 1
+
+    # Lookups
+    sku_lookup = sku_df.set_index("sku_id").to_dict("index")
+    inventory_by_store = inventory_df.groupby("store_id")["sku_id"].apply(list).to_dict()
+    customers_by_city = cust_df.groupby("city")["cust_id"].apply(list).to_dict()
+
+    # baseline receipts per store per day
+    baseline_mean_per_store_day = max(8, int((TARGET_RECEIPTS / (len(ALL_DATES) * len(store_df)))))
+    baseline_mean_per_store_day = int(np.clip(baseline_mean_per_store_day, 8, 30))
+
+    for date in ALL_DATES:
+        day_mul = get_seasonality_multiplier(date)
+        for _, store in store_df.iterrows():
+            store_id = store["store_id"]
+            lam = baseline_mean_per_store_day * day_mul
+            receipts_today = np.random.poisson(lam=lam)
+
+            if date.month == 12:
+                receipts_today = int(receipts_today * 1.15)
+
+            receipts_today = int(np.clip(receipts_today, 0, 200))
+
+            remaining = target_line_items - total_rows
+            est_rows_if_all = receipts_today * avg_basket
+            if est_rows_if_all > remaining:
+                receipts_today = max(0, int(remaining / avg_basket))
+
+            # prepare SKUs for this store
+            skus_for_store = inventory_by_store.get(store_id)
+            if not skus_for_store or len(skus_for_store) < 200:
+                skus_for_store = sku_df["sku_id"].sample(500, replace=False).tolist()
+
+            for _ in range(receipts_today):
+                basket_size = np.random.randint(5, 8)
+                ch_probs = CHANNEL_PROBS.copy()
+                if BLACK_FRIDAY - timedelta(days=2) <= date <= BLACK_FRIDAY + timedelta(days=2):
+                    ch_probs = [0.55, 0.30, 0.10, 0.05]
+                if DSF_START <= date <= END_DATE or (UAE_NATIONAL_DAY - timedelta(days=1) <= date <= UAE_NATIONAL_DAY + timedelta(days=1)):
+                    ch_probs = [0.75, 0.16, 0.07, 0.02]
+
+                channel = np.random.choice(CHANNELS, p=ch_probs)
+
+                if np.random.rand() < np.random.uniform(0.10, 0.15):
+                    cust_id = np.nan
+                else:
+                    city_customers = customers_by_city.get(store["city"], None)
+                    if city_customers and np.random.rand() < 0.85:
+                        cust_id = np.random.choice(city_customers)
+                    else:
+                        cust_id = cust_df.sample(1)["cust_id"].values[0]
+
+                # choose SKUs for basket
+                chosen_skus = np.random.choice(skus_for_store, size=basket_size, replace=False)
+
+                for sku_id in chosen_skus:
+                    sku_row = sku_lookup[sku_id]
+                    if sku_row["category"] == "Electronics":
+                        qty = 1
+                    else:
+                        qty = int(np.clip(np.random.poisson(1.6) + 1, 1, 6))
+
+                    unit_price = sku_row["unit_price"]
+                    if channel == "Website" and np.random.rand() < 0.25:
+                        unit_price = round(unit_price * np.random.uniform(0.92, 1.02), 2)
+                    if channel == "Marketplace" and np.random.rand() < 0.15:
+                        unit_price = round(unit_price * np.random.uniform(0.90, 1.05), 2)
+
+                    promo_discount, promo_id = apply_promotion_to_sku(promos_df, sku_row, date)
+
+                    adhoc_discount = 0
+                    if np.random.rand() < 0.03:
+                        adhoc_discount = np.random.choice([5, 7, 10])
+
+                    total_discount = promo_discount + adhoc_discount
+                    total_discount = min(total_discount, 60)
+                    discount_pct = float(total_discount)
+
+                    if np.random.rand() < 0.02:
+                        qty = max(1, int(math.ceil(qty * np.random.uniform(0.2, 0.6))))
+
+                    total_value = round(qty * unit_price * (1 - discount_pct / 100.0), 2)
+
+                    row = {
+                        "date": date.date().isoformat(),
+                        "receipt_id": f"R{receipt_id_counter:09d}",
+                        "store_id": store_id,
+                        "sku_id": sku_id,
+                        "customer_id": cust_id,
+                        "quantity": qty,
+                        "unit_price": unit_price,
+                        "total_value": total_value,
+                        "channel": channel,
+                        "discount_pct": discount_pct,
+                        "promo_id": promo_id if promo_id is not None else ""
+                    }
+                    buffer_rows.append(row)
+                    total_rows += 1
+
+                    if len(buffer_rows) >= chunk_size:
+                        df_chunk = pd.DataFrame(buffer_rows)
+                        header = not os.path.exists(sales_file)
+                        df_chunk.to_csv(sales_file, mode="a", header=header, index=False)
+                        buffer_rows = []
+
+                    if total_rows >= target_line_items:
+                        break
+
+                receipt_id_counter += 1
+                if total_rows >= target_line_items:
+                    break
+
+            if total_rows >= target_line_items:
+                break
+
+        if total_rows >= target_line_items:
+            break
+
+    # final flush
+    if buffer_rows:
+        df_chunk = pd.DataFrame(buffer_rows)
+        header = not os.path.exists(sales_file)
+        df_chunk.to_csv(sales_file, mode="a", header=header, index=False)
+
+    return total_rows
+
+
+# =========================
+# MAIN RUN
+# =========================
+if __name__ == "__main__":
+    # 1. Generate master tables
+    store_df = generate_store_master()
+    print("Store master created:", store_df.shape)
+
+    sku_df = generate_sku_master()
+    print("SKU master created:", sku_df.shape)
+
+    cust_df = generate_customer_master()
+    print("Customer master created:", cust_df.shape)
+
+    # 2. Generate promotions
+    promos_df = generate_promotions(sku_df)
+    print("Promotions created:", promos_df.shape)
+
+    # 3. Inventory snapshot
+    inventory_df = generate_inventory_snapshot(store_df, sku_df)
+    print("Inventory snapshot created:", inventory_df.shape)
+
+    # 4. Sales transactions (heavy part)
+    print("Starting generation of sales transactions (this may take a few moments)...")
+    start_time = datetime.now()
+    written_rows = generate_sales_transactions(store_df, sku_df, cust_df, promos_df, inventory_df)
+    elapsed = datetime.now() - start_time
+    print(f"Sales transactions generation finished. Rows written: {written_rows}. Time elapsed: {elapsed}")
+
+    # 5. Ensure all CSVs present and print samples
+    store_df.to_csv(os.path.join(DATA_DIR, "store_master.csv"), index=False)
+    sku_df.to_csv(os.path.join(DATA_DIR, "sku_master.csv"), index=False)
+    cust_df.to_csv(os.path.join(DATA_DIR, "customer_master.csv"), index=False)
+    promos_df.to_csv(os.path.join(DATA_DIR, "promotions.csv"), index=False)
+    inventory_df.to_csv(os.path.join(DATA_DIR, "inventory_snapshot.csv"), index=False)
+
+    def file_info_preview(path, nrows=3):
+        size = os.path.getsize(path) / (1024 * 1024)
+        print(f"\nFile: {os.path.basename(path)} | Size: {size:.2f} MB")
+        try:
+            df = pd.read_csv(path, nrows=nrows)
+            print(df.head(nrows))
+        except Exception as e:
+            print("Could not preview file due to:", e)
+
+    print("\n--- Generated Files Summary & Sample Rows ---\n")
+    file_info_preview(os.path.join(DATA_DIR, "store_master.csv"))
+    file_info_preview(os.path.join(DATA_DIR, "sku_master.csv"))
+    file_info_preview(os.path.join(DATA_DIR, "customer_master.csv"))
+    file_info_preview(os.path.join(DATA_DIR, "promotions.csv"))
+    file_info_preview(os.path.join(DATA_DIR, "inventory_snapshot.csv"))
+    file_info_preview(os.path.join(DATA_DIR, "sales_transactions.csv"))
+
+    print(f"\nFinal confirmation: Sales transactions rows = {written_rows}")
+    print(f"SKU master rows = {len(sku_df)}, Customer master rows = {len(cust_df)}, Store master rows = {len(store_df)}")
+    print(f"All CSVs saved in {os.path.abspath(DATA_DIR)}")

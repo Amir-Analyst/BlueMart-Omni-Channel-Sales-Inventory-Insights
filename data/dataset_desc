@@ -1,0 +1,75 @@
+Store master created: (30, 5)
+SKU master created: (5000, 7)
+Customer master created: (10000, 7)
+Promotions created: (100, 8)
+Inventory snapshot created: (21228, 6)
+Starting generation of sales transactions (this may take a few moments)...
+Sales transactions generation finished. Rows written: 1200000. Time elapsed: 0:19:57.466368
+
+--- Generated Files Summary & Sample Rows ---
+
+
+File: store_master.csv | Size: 0.00 MB
+  store_id      store_name   city   store_type opening_date
+0     S001  BlueMart DUB 1  Dubai  High Street   2006-04-15
+1     S002  BlueMart DUB 2  Dubai         Mall   2020-07-26
+2     S003  BlueMart DUB 3  Dubai         Mall   2010-11-24
+
+File: sku_master.csv | Size: 0.33 MB
+     sku_id             sku_name category subcategory  unit_price  cost_price  \
+0  SKU00001    BlueMart Yogurt 1    Dairy      Yogurt        8.62        4.96   
+1  SKU00002   FreshFarm Staple 2  Grocery     Staples       73.25       41.67   
+2  SKU00003  DailyDelight Nuts 3   Snacks        Nuts       38.42       22.03   
+
+          brand  
+0      BlueMart  
+1     FreshFarm  
+2  DailyDelight  
+
+File: customer_master.csv | Size: 0.46 MB
+   cust_id  age  gender       city loyalty_segment preferred_channel  \
+0  C100001   48    Male  Abu Dhabi          Silver            Mobile   
+1  C100002   35  Female    Sharjah          Silver            Mobile   
+2  C100003   34    Male  Abu Dhabi            Gold             Store   
+
+  registration_date  
+0        2021-07-01  
+1        2022-09-21  
+2        2018-10-22  
+
+File: promotions.csv | Size: 0.01 MB
+  promo_id            promo_name  start_date    end_date  discount_pct  \
+0    P0001          BOGO ALL 25%  2025-03-29  2025-04-11            25   
+1    P0002  Bundle Beverages 30%  2025-10-01  2025-10-08            30   
+2    P0003   Flash Sale Skin 25%  2025-09-26  2025-10-02            25   
+
+   promo_type  target_type target_value  
+0        BOGO    Storewide          ALL  
+1      Bundle     Category    Beverages  
+2  Flash Sale  Subcategory         Skin  
+
+File: inventory_snapshot.csv | Size: 0.67 MB
+  store_id    sku_id  stock_on_hand  reorder_point  safety_stock  \
+0     S001  SKU02159             92             15            10   
+1     S001  SKU03549             68             18            14   
+2     S001  SKU01841             13              2             1   
+
+  last_restock_date  
+0        2025-03-31  
+1        2025-11-23  
+2        2025-11-20  
+
+File: sales_transactions.csv | Size: 81.48 MB
+         date  receipt_id store_id    sku_id customer_id  quantity  \
+0  2025-01-01  R000000001     S001  SKU04222     C108328         1   
+1  2025-01-01  R000000001     S001  SKU00881     C108328         1   
+2  2025-01-01  R000000001     S001  SKU04916     C108328         2   
+
+   unit_price  total_value channel  discount_pct  promo_id  
+0       17.03        17.03   Store           0.0       NaN  
+1       16.42        16.42   Store           0.0       NaN  
+2       10.12        20.24   Store           0.0       NaN  
+
+Final confirmation: Sales transactions rows = 1200000
+SKU master rows = 5000, Customer master rows = 10000, Store master rows = 30
+All CSVs saved in /content/data

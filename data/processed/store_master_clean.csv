@@ -1,0 +1,31 @@
+store_id,store_name,city,store_type,opening_date
+S001,BlueMart DUB 1,Dubai,High Street,2006-04-15
+S002,BlueMart DUB 2,Dubai,Mall,2020-07-26
+S003,BlueMart DUB 3,Dubai,Mall,2010-11-24
+S004,BlueMart DUB 4,Dubai,Mall,2007-08-03
+S005,BlueMart DUB 5,Dubai,Community,2001-08-12
+S006,BlueMart DUB 6,Dubai,High Street,2001-12-21
+S007,BlueMart DUB 7,Dubai,Mall,2021-12-25
+S008,BlueMart DUB 8,Dubai,Mall,2009-12-16
+S009,BlueMart DUB 9,Dubai,High Street,2014-03-12
+S010,BlueMart DUB 10,Dubai,High Street,2002-05-19
+S011,BlueMart DUB 11,Dubai,Community,2008-07-18
+S012,BlueMart DUB 12,Dubai,Mall,2013-02-26
+S013,BlueMart DUB 13,Dubai,Mall,2020-02-20
+S014,BlueMart DUB 14,Dubai,Mall,2006-12-08
+S015,BlueMart ABU 1,Abu Dhabi,Mall,2013-01-04
+S016,BlueMart ABU 2,Abu Dhabi,Mall,2003-02-06
+S017,BlueMart ABU 3,Abu Dhabi,High Street,2003-06-18
+S018,BlueMart ABU 4,Abu Dhabi,High Street,2001-10-04
+S019,BlueMart ABU 5,Abu Dhabi,Mall,2015-08-14
+S020,BlueMart ABU 6,Abu Dhabi,High Street,2007-05-16
+S021,BlueMart ABU 7,Abu Dhabi,Mall,2014-05-24
+S022,BlueMart ABU 8,Abu Dhabi,Mall,2012-09-15
+S023,BlueMart ABU 9,Abu Dhabi,Mall,2006-09-24
+S024,BlueMart ABU 10,Abu Dhabi,Mall,2007-08-11
+S025,BlueMart SHA 1,Sharjah,High Street,2007-03-03
+S026,BlueMart SHA 2,Sharjah,High Street,2004-10-07
+S027,BlueMart SHA 3,Sharjah,Mall,2006-09-08
+S028,BlueMart SHA 4,Sharjah,High Street,2000-07-23
+S029,BlueMart SHA 5,Sharjah,High Street,2004-03-12
+S030,BlueMart SHA 6,Sharjah,Mall,2002-01-03

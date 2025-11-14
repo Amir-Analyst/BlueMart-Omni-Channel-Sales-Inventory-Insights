@@ -1,10 +1,6 @@
 <p align="center">
-  <img src="data/bluemart.png" width="180">
+  <img src="data/bluemart.png" width="360">
 </p>
-
-![BlueMart Logo](data/bluemart.png)
-
-
 # **BlueMart Retail LLC — 2025 Analytics Project Story**
 
 ---

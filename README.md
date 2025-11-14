@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="data/bluemart.png" width="180">
+</p>
+
 ![BlueMart Logo](data/bluemart.png)
 
 

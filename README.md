@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="data/bluemart.png" width="360">
+  <img src="assets/bluemart.png" width="360">
 </p>
 
 # **BlueMart Retail LLC — 2025 Analytics Project Story**

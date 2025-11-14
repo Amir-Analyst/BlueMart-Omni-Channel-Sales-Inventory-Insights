@@ -1,4 +1,4 @@
-##########![BlueMart Logo](data/bluemart.png)
+########## ![BlueMart Logo](data/bluemart.png)
 
 
 # **BlueMart Retail LLC — 2025 Analytics Project Story**

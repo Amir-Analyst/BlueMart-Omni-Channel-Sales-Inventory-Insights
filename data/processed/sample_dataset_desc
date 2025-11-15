@@ -1,0 +1,180 @@
+Full dataset: (1200000, 42)
+
+Revenue Tier Distribution:
+value_tier
+low      0.70
+medium   0.25
+high     0.05
+Name: proportion, dtype: float64
+
+Dashboard dataset shape: (1200000, 20)
+
+Target rows = 150000
+Base sampling fraction: 0.125
+
+Sampling probability stats:
+count   1,200,000.00
+mean            0.14
+std             0.03
+min             0.12
+25%             0.12
+50%             0.12
+75%             0.16
+max             0.25
+Name: sampling_prob, dtype: float64
+
+Final sample: (150000, 23)
+
+Saved sample data to: /content/drive/MyDrive/Amir/work/Data Science/project/dataset/bluemart/processed/sales_dashboard_sample_150k.csv
+
+=== Distribution check for: month ===
+Full dataset:
+month
+3    0.10
+11   0.09
+10   0.09
+8    0.09
+5    0.09
+7    0.09
+6    0.09
+1    0.09
+4    0.08
+9    0.08
+2    0.08
+12   0.04
+Name: proportion, dtype: float64
+Sample dataset:
+month
+3    0.10
+11   0.09
+10   0.09
+6    0.09
+8    0.09
+7    0.09
+1    0.09
+5    0.09
+9    0.08
+4    0.08
+2    0.08
+12   0.04
+Name: proportion, dtype: float64
+
+=== Distribution check for: store_id ===
+Full dataset:
+store_id
+S011   0.03
+S022   0.03
+S015   0.03
+S020   0.03
+S007   0.03
+S002   0.03
+S005   0.03
+S010   0.03
+S023   0.03
+S001   0.03
+S016   0.03
+S008   0.03
+S019   0.03
+S029   0.03
+S003   0.03
+S025   0.03
+S027   0.03
+S024   0.03
+S013   0.03
+S014   0.03
+S018   0.03
+S012   0.03
+S009   0.03
+S030   0.03
+S006   0.03
+S004   0.03
+S028   0.03
+S026   0.03
+S021   0.03
+S017   0.03
+Name: proportion, dtype: float64
+Sample dataset:
+store_id
+S022   0.03
+S025   0.03
+S010   0.03
+S012   0.03
+S027   0.03
+S014   0.03
+S002   0.03
+S007   0.03
+S015   0.03
+S005   0.03
+S020   0.03
+S013   0.03
+S011   0.03
+S001   0.03
+S024   0.03
+S009   0.03
+S003   0.03
+S028   0.03
+S016   0.03
+S006   0.03
+S029   0.03
+S004   0.03
+S019   0.03
+S030   0.03
+S018   0.03
+S021   0.03
+S023   0.03
+S026   0.03
+S008   0.03
+S017   0.03
+Name: proportion, dtype: float64
+
+=== Distribution check for: category ===
+Full dataset:
+category
+Dairy           0.15
+Snacks          0.15
+Electronics     0.14
+Household       0.14
+Grocery         0.14
+Personal Care   0.14
+Beverages       0.14
+Name: proportion, dtype: float64
+Sample dataset:
+category
+Electronics     0.18
+Household       0.15
+Dairy           0.14
+Grocery         0.14
+Personal Care   0.13
+Snacks          0.13
+Beverages       0.12
+Name: proportion, dtype: float64
+
+=== Distribution check for: channel ===
+Full dataset:
+channel
+Store         0.70
+Website       0.20
+Mobile        0.08
+Marketplace   0.02
+Name: proportion, dtype: float64
+Sample dataset:
+channel
+Store         0.70
+Website       0.20
+Mobile        0.08
+Marketplace   0.02
+Name: proportion, dtype: float64
+
+=== Distribution check for: value_tier ===
+Full dataset:
+value_tier
+low      0.70
+medium   0.25
+high     0.05
+Name: proportion, dtype: float64
+Sample dataset:
+value_tier
+low      0.63
+medium   0.28
+high     0.09
+Name: proportion, dtype: float64

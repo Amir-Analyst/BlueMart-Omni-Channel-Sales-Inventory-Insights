@@ -1,0 +1,113 @@
+import pandas as pd
+import numpy as np
+
+# ======================================
+# 1. Load Full Dataset
+# ======================================
+file_path = "/content/drive/MyDrive/Amir/work/Data Science/project/dataset/bluemart/processed/sales_enriched.csv"
+df = pd.read_csv(file_path, low_memory=False)
+
+print("Full dataset:", df.shape)
+df['date'] = pd.to_datetime(df['date'])
+
+# ======================================
+# 2. Create Revenue Tiers (Important!)
+# ======================================
+df['revenue_rank_pct'] = df['revenue'].rank(pct=True)
+
+df['value_tier'] = pd.cut(
+    df['revenue_rank_pct'],
+    bins=[0, 0.70, 0.95, 1.0],
+    labels=['low', 'medium', 'high']
+)
+
+# Convert categorical to string for mapping
+df['value_tier'] = df['value_tier'].astype(str)
+
+print("\nRevenue Tier Distribution:")
+print(df['value_tier'].value_counts(normalize=True))
+
+# ======================================
+# 3. Define columns for dashboard
+# ======================================
+dashboard_cols = [
+    'date', 'receipt_id', 'store_id', 'store_type', 'city_x',
+    'sku_id', 'sku_name', 'category', 'subcategory', 'brand',
+    'quantity', 'revenue', 'profit',
+    'channel', 'promo_id', 'discount_pct',
+    'customer_id', 'value_tier'
+]
+
+# Ensure all columns exist
+missing = [c for c in dashboard_cols if c not in df.columns]
+if missing:
+    raise KeyError(f"Missing columns: {missing}")
+
+df_dash = df[dashboard_cols].copy()
+
+# Extract time components
+df_dash['month'] = df_dash['date'].dt.month
+df_dash['dayofweek'] = df_dash['date'].dt.dayofweek
+
+print("\nDashboard dataset shape:", df_dash.shape)
+
+# ======================================
+# 4. Stratification Keys
+# ======================================
+strata_cols = ['month', 'store_id', 'category', 'channel', 'value_tier']
+df_dash['strata_key'] = df_dash[strata_cols].astype(str).agg('_'.join, axis=1)
+
+# ======================================
+# 5. Target sample size
+# ======================================
+TARGET_ROWS = 150_000
+print("\nTarget rows =", TARGET_ROWS)
+
+sampling_fraction = TARGET_ROWS / len(df_dash)
+print("Base sampling fraction:", sampling_fraction)
+
+# ======================================
+# 6. Oversampling multipliers
+# ======================================
+value_multipliers = {'low': 1.0, 'medium': 1.25, 'high': 2.0}
+df_dash['multiplier'] = df_dash['value_tier'].map(value_multipliers)
+
+# Weighted sampling probability
+df_dash['sampling_prob'] = sampling_fraction * df_dash['multiplier']
+df_dash['sampling_prob'] = df_dash['sampling_prob'].clip(upper=1.0)
+
+print("\nSampling probability stats:")
+print(df_dash['sampling_prob'].describe())
+
+# ======================================
+# 7. Perform Weighted Sampling
+# ======================================
+sample_df = df_dash.sample(
+    n=TARGET_ROWS,
+    replace=False,
+    weights=df_dash['sampling_prob'],
+    random_state=42
+)
+
+print("\nFinal sample:", sample_df.shape)
+
+# ======================================
+# 8. Save Sample Dataset
+# ======================================
+out_path = "/content/drive/MyDrive/Amir/work/Data Science/project/dataset/bluemart/processed/sales_dashboard_sample_150k.csv"
+sample_df.to_csv(out_path, index=False)
+
+print("\nSaved sample data to:", out_path)
+
+# ======================================
+# 9. Distribution Check
+# ======================================
+def compare_dist(col):
+    print(f"\n=== Distribution check for: {col} ===")
+    print("Full dataset:")
+    print(df_dash[col].value_counts(normalize=True).round(3))
+    print("Sample dataset:")
+    print(sample_df[col].value_counts(normalize=True).round(3))
+
+for col in ['month', 'store_id', 'category', 'channel', 'value_tier']:
+    compare_dist(col)
